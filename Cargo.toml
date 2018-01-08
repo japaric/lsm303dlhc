@@ -1,0 +1,12 @@
+[package]
+authors = ["Jorge Aparicio <jorge@japaric.io>"]
+name = "lsm303dlhc"
+version = "0.1.0"
+
+[dependencies.cast]
+default-features = false
+version = "0.2.2"
+
+[dependencies.embedded-hal]
+branch = "v1"
+git = "https://github.com/japaric/embedded-hal"
