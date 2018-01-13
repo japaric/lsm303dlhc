@@ -77,6 +77,22 @@ where
         Ok(((u16(temp_out_l) + (u16(temp_out_h) << 8)) as i16) >> 4)
     }
 
+    /// Changes the `sensitivity` of the accelerometer
+    pub fn set_accel_sensitivity(&mut self, sensitivity: Sensitivity) -> Result<(), E> {
+        self.modify_accel_register(accel::Register::CTRL_REG4_A, |r| {
+            r & !(0b11 << 4) | (sensitivity.value() << 4)
+        })
+    }
+
+    fn modify_accel_register<F>(&mut self, reg: accel::Register, f: F) -> Result<(), E>
+    where
+        F: FnOnce(u8) -> u8,
+    {
+        let r = self.read_accel_register(reg)?;
+        self.write_accel_register(reg, f(r))?;
+        Ok(())
+    }
+
     fn read_accel_registers<B>(&mut self, reg: accel::Register) -> Result<B, E>
     where
         B: Unsize<[u8]>,
@@ -92,6 +108,10 @@ where
         }
 
         Ok(buffer)
+    }
+
+    fn read_accel_register(&mut self, reg: accel::Register) -> Result<u8, E> {
+        self.read_accel_registers::<[u8; 1]>(reg).map(|b| b[0])
     }
 
     fn read_mag_register(&mut self, reg: mag::Register) -> Result<u8, E> {
@@ -133,4 +153,23 @@ pub struct I16x3 {
     pub y: i16,
     /// Z component
     pub z: i16,
+}
+
+/// Acceleration sensitivity
+#[derive(Clone, Copy)]
+pub enum Sensitivity {
+    /// Range: [-2g, +2g]. Sensitivity: 1 mg/LSB
+    G1,
+    /// Range: [-4g, +4g]. Sensitivity: 2 mg/LSB
+    G2,
+    /// Range: [-8g, +8g]. Sensitivity: 4 mg/LSB
+    G4,
+    /// Range: [-16g, +16g]. Sensitivity: 12 mg/LSB
+    G12,
+}
+
+impl Sensitivity {
+    fn value(&self) -> u8 {
+        *self as u8
+    }
 }
