@@ -158,13 +158,13 @@ pub struct I16x3 {
 /// Acceleration sensitivity
 #[derive(Clone, Copy)]
 pub enum Sensitivity {
-    /// Range: [-2g, +2g]. Sensitivity: 1 mg/LSB
+    /// Range: [-2g, +2g]. Sensitivity ~ 1 g / (1 << 14) LSB
     G1,
-    /// Range: [-4g, +4g]. Sensitivity: 2 mg/LSB
+    /// Range: [-4g, +4g]. Sensitivity ~ 2 g / (1 << 14) LSB
     G2,
-    /// Range: [-8g, +8g]. Sensitivity: 4 mg/LSB
+    /// Range: [-8g, +8g]. Sensitivity ~ 4 g / (1 << 14) LSB
     G4,
-    /// Range: [-16g, +16g]. Sensitivity: 12 mg/LSB
+    /// Range: [-16g, +16g]. Sensitivity ~ 12 g / (1 << 14) LSB
     G12,
 }
 
