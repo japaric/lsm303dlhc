@@ -1,13 +1,13 @@
 [package]
 authors = ["Jorge Aparicio <jorge@japaric.io>"]
 categories = ["embedded", "hardware-support", "no-std"]
-description = "A platform agnostic driver to interface the L3GD20 (gyroscope)"
+description = "A platform agnostic driver to interface with the LSM303DLHC (accelerometer + compass)"
 documentation = "https://docs.rs/lsm303dlhc"
 keywords = ["embedded-hal", "accelerometer", "compass"]
 license = "MIT OR Apache-2.0"
 name = "lsm303dlhc"
 repository = "https://github.com/japaric/lsm303dlhc"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 embedded-hal = "0.1.0"
