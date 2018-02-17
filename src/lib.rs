@@ -65,6 +65,13 @@ where
         })
     }
 
+    /// Sets the accelerometer output data rate
+    pub fn accel_odr(&mut self, odr: AccelOdr) -> Result<(), E> {
+        self.modify_accel_register(accel::Register::CTRL_REG1_A, |r| {
+            r & !(0b1111 << 4) | ((odr as u8) << 4)
+        })
+    }
+
     /// Magnetometer measurements
     pub fn mag(&mut self) -> Result<I16x3, E> {
         let buffer: [u8; 6] = self.read_mag_registers(mag::Register::OUT_X_H_M)?;
@@ -73,6 +80,13 @@ where
             x: (u16(buffer[1]) + (u16(buffer[0]) << 8)) as i16,
             y: (u16(buffer[5]) + (u16(buffer[4]) << 8)) as i16,
             z: (u16(buffer[3]) + (u16(buffer[2]) << 8)) as i16,
+        })
+    }
+
+    /// Sets the magnetometer output data rate
+    pub fn mag_odr(&mut self, odr: MagOdr) -> Result<(), E> {
+        self.modify_mag_register(mag::Register::CRA_REG_M, |r| {
+            r & !(0b111 << 2) | ((odr as u8) << 2)
         })
     }
 
@@ -100,6 +114,15 @@ where
     {
         let r = self.read_accel_register(reg)?;
         self.write_accel_register(reg, f(r))?;
+        Ok(())
+    }
+
+    fn modify_mag_register<F>(&mut self, reg: mag::Register, f: F) -> Result<(), E>
+    where
+        F: FnOnce(u8) -> u8,
+    {
+        let r = self.read_mag_register(reg)?;
+        self.write_mag_register(reg, f(r))?;
         Ok(())
     }
 
@@ -163,6 +186,44 @@ pub struct I16x3 {
     pub y: i16,
     /// Z component
     pub z: i16,
+}
+
+/// Accelerometer Output Data Rate
+pub enum AccelOdr {
+    /// 1 Hz
+    Hz1 = 0b0001,
+    /// 10 Hz
+    Hz10 = 0b0010,
+    /// 25 Hz
+    Hz25 = 0b0011,
+    /// 50 Hz
+    Hz50 = 0b0100,
+    /// 100 Hz
+    Hz100 = 0b0101,
+    /// 200 Hz
+    Hz200 = 0b0110,
+    /// 400 Hz
+    Hz400 = 0b0111,
+}
+
+/// Magnetometer Output Data Rate
+pub enum MagOdr {
+    /// 0.75 Hz
+    Hz0_75 = 0b000,
+    /// 1.5 Hz
+    Hz1_5 = 0b001,
+    /// 3 Hz
+    Hz3 = 0b010,
+    /// 7.5 Hz
+    Hz7_5 = 0b011,
+    /// 15 Hz
+    Hz15 = 0b100,
+    /// 30 Hz
+    Hz30 = 0b101,
+    /// 75 Hz
+    Hz75 = 0b110,
+    /// 220 Hz
+    Hz220 = 0b111,
 }
 
 /// Acceleration sensitivity
