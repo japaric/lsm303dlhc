@@ -2,26 +2,27 @@
 //!
 //! This driver was built using [`embedded-hal`] traits.
 //!
-//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.1
+//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.2
 //!
 //! # Examples
 //!
 //! You should find at least one example in the [f3] crate.
 //!
-//! [f3]: https://docs.rs/f3/~0.5
+//! [f3]: https://docs.rs/f3/~0.6
 
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(unsize)]
 #![no_std]
 
 extern crate cast;
 extern crate embedded_hal as hal;
+extern crate generic_array;
 
-use core::marker::Unsize;
 use core::mem;
 
 use cast::u16;
+use generic_array::typenum::consts::*;
+use generic_array::{ArrayLength, GenericArray};
 use hal::blocking::i2c::{Write, WriteRead};
 
 mod accel;
@@ -56,7 +57,7 @@ where
 
     /// Accelerometer measurements
     pub fn accel(&mut self) -> Result<I16x3, E> {
-        let buffer: [u8; 6] = self.read_accel_registers(accel::Register::OUT_X_L_A)?;
+        let buffer: GenericArray<u8, U6> = self.read_accel_registers(accel::Register::OUT_X_L_A)?;
 
         Ok(I16x3 {
             x: (u16(buffer[0]) + (u16(buffer[1]) << 8)) as i16,
@@ -74,7 +75,7 @@ where
 
     /// Magnetometer measurements
     pub fn mag(&mut self) -> Result<I16x3, E> {
-        let buffer: [u8; 6] = self.read_mag_registers(mag::Register::OUT_X_H_M)?;
+        let buffer: GenericArray<u8, U6> = self.read_mag_registers(mag::Register::OUT_X_H_M)?;
 
         Ok(I16x3 {
             x: (u16(buffer[1]) + (u16(buffer[0]) << 8)) as i16,
@@ -126,11 +127,11 @@ where
         Ok(())
     }
 
-    fn read_accel_registers<B>(&mut self, reg: accel::Register) -> Result<B, E>
+    fn read_accel_registers<N>(&mut self, reg: accel::Register) -> Result<GenericArray<u8, N>, E>
     where
-        B: Unsize<[u8]>,
+        N: ArrayLength<u8>,
     {
-        let mut buffer: B = unsafe { mem::uninitialized() };
+        let mut buffer: GenericArray<u8, N> = unsafe { mem::uninitialized() };
 
         {
             let buffer: &mut [u8] = &mut buffer;
@@ -144,20 +145,20 @@ where
     }
 
     fn read_accel_register(&mut self, reg: accel::Register) -> Result<u8, E> {
-        self.read_accel_registers::<[u8; 1]>(reg).map(|b| b[0])
+        self.read_accel_registers::<U1>(reg).map(|b| b[0])
     }
 
     fn read_mag_register(&mut self, reg: mag::Register) -> Result<u8, E> {
-        let buffer: [u8; 1] = self.read_mag_registers(reg)?;
+        let buffer: GenericArray<u8, U1> = self.read_mag_registers(reg)?;
         Ok(buffer[0])
     }
 
     // NOTE has weird address increment semantics; use only with `OUT_X_H_M`
-    fn read_mag_registers<B>(&mut self, reg: mag::Register) -> Result<B, E>
+    fn read_mag_registers<N>(&mut self, reg: mag::Register) -> Result<GenericArray<u8, N>, E>
     where
-        B: Unsize<[u8]>,
+        N: ArrayLength<u8>,
     {
-        let mut buffer: B = unsafe { mem::uninitialized() };
+        let mut buffer: GenericArray<u8, N> = unsafe { mem::uninitialized() };
 
         {
             let buffer: &mut [u8] = &mut buffer;
