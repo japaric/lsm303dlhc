@@ -14,13 +14,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [breaking-change] moved to v0.2.0 of the `embedded-hal` traits. This crate now compiles on beta
   and stable.
 
-## v0.1.2 - 2018-02-19
+## [v0.1.2] - 2018-02-19
 
 ### Added
 
 - Methods to change the ODR (Output Data Rate) of the accelerometer and magnetometer.
 
-## v0.1.1 - 2018-01-17
+## [v0.1.1] - 2018-01-17
 
 ### Fixed
 
