@@ -14,12 +14,15 @@
 #![deny(warnings)]
 #![no_std]
 
+extern crate accelerometer;
 extern crate cast;
 extern crate embedded_hal as hal;
 extern crate generic_array;
 
+use core::fmt::Debug;
 use core::mem;
 
+pub use accelerometer::{Accelerometer, I16x3};
 use cast::u16;
 use generic_array::typenum::consts::*;
 use generic_array::{ArrayLength, GenericArray};
@@ -53,17 +56,6 @@ where
         lsm303dlhc.write_mag_register(mag::Register::CRA_REG_M, 0b0001000 | (1 << 7))?;
 
         Ok(lsm303dlhc)
-    }
-
-    /// Accelerometer measurements
-    pub fn accel(&mut self) -> Result<I16x3, E> {
-        let buffer: GenericArray<u8, U6> = self.read_accel_registers(accel::Register::OUT_X_L_A)?;
-
-        Ok(I16x3 {
-            x: (u16(buffer[0]) + (u16(buffer[1]) << 8)) as i16,
-            y: (u16(buffer[2]) + (u16(buffer[3]) << 8)) as i16,
-            z: (u16(buffer[4]) + (u16(buffer[5]) << 8)) as i16,
-        })
     }
 
     /// Sets the accelerometer output data rate
@@ -178,15 +170,23 @@ where
     }
 }
 
-/// XYZ triple
-#[derive(Debug)]
-pub struct I16x3 {
-    /// X component
-    pub x: i16,
-    /// Y component
-    pub y: i16,
-    /// Z component
-    pub z: i16,
+impl<I2C, E> Accelerometer<I16x3> for Lsm303dlhc<I2C>
+where
+    I2C: WriteRead<Error = E> + Write<Error = E>,
+    E: Debug,
+{
+    type Error = E;
+
+    /// Accelerometer measurements
+    fn acceleration(&mut self) -> Result<I16x3, E> {
+        let buffer: GenericArray<u8, U6> = self.read_accel_registers(accel::Register::OUT_X_L_A)?;
+
+        Ok(I16x3 {
+            x: (u16(buffer[0]) + (u16(buffer[1]) << 8)) as i16,
+            y: (u16(buffer[2]) + (u16(buffer[3]) << 8)) as i16,
+            z: (u16(buffer[4]) + (u16(buffer[5]) << 8)) as i16,
+        })
+    }
 }
 
 /// Accelerometer Output Data Rate
