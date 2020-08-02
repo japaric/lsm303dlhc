@@ -55,6 +55,25 @@ where
         Ok(lsm303dlhc)
     }
 
+    /// Read `STATUS_REG_A` of sensor. Useful for getting status information about acceleration.
+    pub fn get_accel_status(&mut self) -> Result<Status, E> {
+        let buffer: GenericArray<u8, U1> = self.read_accel_registers(accel::Register::STATUS_REG_A)?;
+        let status_byte = buffer[0];
+
+        let status = Status {
+            overrun: (status_byte & 0x80) != 0,
+            z_overrun: (status_byte & 0x40) != 0,
+            y_overrun: (status_byte & 0x20) != 0,
+            x_overrun: (status_byte & 0x10) != 0,
+            new_data: (status_byte & 0x08) != 0,
+            z_new: (status_byte & 0x04) != 0,
+            y_new: (status_byte & 0x02) != 0,
+            x_new: (status_byte & 0x01) != 0,
+        };
+
+        Ok(status)
+    }
+
     /// Accelerometer measurements
     pub fn accel(&mut self) -> Result<I16x3, E> {
         let buffer: GenericArray<u8, U6> = self.read_accel_registers(accel::Register::OUT_X_L_A)?;
@@ -71,6 +90,25 @@ where
         self.modify_accel_register(accel::Register::CTRL_REG1_A, |r| {
             r & !(0b1111 << 4) | ((odr as u8) << 4)
         })
+    }
+
+    /// Read `STATUS_REG_A` of sensor. Useful for getting status information about acceleration.
+    pub fn get_mag_status(&mut self) -> Result<Status, E> {
+        let buffer: GenericArray<u8, U1> = self.read_accel_registers(accel::Register::STATUS_REG_A)?;
+        let status_byte = buffer[0];
+
+        let status = Status {
+            overrun: (status_byte & 0x80) != 0,
+            z_overrun: (status_byte & 0x40) != 0,
+            y_overrun: (status_byte & 0x20) != 0,
+            x_overrun: (status_byte & 0x10) != 0,
+            new_data: (status_byte & 0x08) != 0,
+            z_new: (status_byte & 0x04) != 0,
+            y_new: (status_byte & 0x02) != 0,
+            x_new: (status_byte & 0x01) != 0,
+        };
+
+        Ok(status)
     }
 
     /// Magnetometer measurements
@@ -131,7 +169,7 @@ where
     where
         N: ArrayLength<u8>,
     {
-        let mut buffer: GenericArray<u8, N> = unsafe { mem::uninitialized() };
+        let mut buffer: GenericArray<u8, N> = unsafe { mem::MaybeUninit::uninit().assume_init() };
 
         {
             let buffer: &mut [u8] = &mut buffer;
@@ -158,7 +196,7 @@ where
     where
         N: ArrayLength<u8>,
     {
-        let mut buffer: GenericArray<u8, N> = unsafe { mem::uninitialized() };
+        let mut buffer: GenericArray<u8, N> = unsafe { mem::MaybeUninit::uninit().assume_init() };
 
         {
             let buffer: &mut [u8] = &mut buffer;
@@ -244,4 +282,26 @@ impl Sensitivity {
     fn value(&self) -> u8 {
         *self as u8
     }
+}
+
+/// Sensor status for acceleration.
+#[derive(Debug, Clone, Copy)]
+pub struct Status {
+    /// Overrun (data has overwritten previously unread data)
+    /// has occurred on at least one axis
+    pub overrun: bool,
+    /// Overrun occurred on Z-axis
+    pub z_overrun: bool,
+    /// Overrun occurred on Y-axis
+    pub y_overrun: bool,
+    /// Overrun occurred on X-axis
+    pub x_overrun: bool,
+    /// New data is available for either X, Y, Z - axis
+    pub new_data: bool,
+    /// New data is available on Z-axis
+    pub z_new: bool,
+    /// New data is available on Y-axis
+    pub y_new: bool,
+    /// New data is available on X-axis
+    pub x_new: bool,
 }
